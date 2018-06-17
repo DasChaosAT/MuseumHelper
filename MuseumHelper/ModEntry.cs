@@ -47,12 +47,12 @@ namespace MuseumHelper
             foreach (KeyValuePair<Vector2, int> pair in museum.museumPieces.Pairs)
                 donatedItemList.Add(pair.Value);
 
-            bool ItemsToDonate = false;
+            bool anyItemsToDonate = false;
             foreach (KeyValuePair<int, Item> donateableItem in donateableItemDic)
                 if (!donatedItemList.Contains(donateableItem.Key))
-                    ItemsToDonate = true;
+                    anyItemsToDonate = true;
 
-            if (ItemsToDonate)
+            if (anyItemsToDonate)
                 Game1.addHUDMessage(new HUDMessage(Helper.Translation.Get("message-type.found-museum-item")));
         }
 
