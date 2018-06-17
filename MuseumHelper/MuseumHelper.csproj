@@ -63,9 +63,6 @@
     <None Include="i18n\de.json" />
     <None Include="i18n\default.json" />
     <None Include="manifest.json" />
-    <Compile Include="ItemData\ItemRepository.cs" />
-    <Compile Include="ItemData\ItemType.cs" />
-    <Compile Include="ItemData\SearchableItem.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -1,20 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Locations;
-using MuseumHelper.ItemData;
+using System.Collections.Generic;
+using System.Linq;
+using SObject = StardewValley.Object;
 
 namespace MuseumHelper
 {
     public class ModEntry : Mod
     {
+        private Dictionary<int, Item> itemDic;
+        private bool itemDicGenerated = false;
 
         public override void Entry(IModHelper helper)
         {
+            GenerateItemList();
             PlayerEvents.InventoryChanged += this.PlayerEvents_InventoryChanged;
         }
 
@@ -23,56 +25,48 @@ namespace MuseumHelper
             if (!Context.IsWorldReady)
                 return;
 
+            if (!itemDicGenerated)
+                return;
+
             LibraryMuseum museum = Game1.locations.OfType<LibraryMuseum>().FirstOrDefault();
             if (museum == null)
                 return;
 
-            bool donateableItem = false;
-            List<string> donateableItemNameList = new List<string>();
-
+            Dictionary<int, Item> donateableItemDic = new Dictionary<int, Item>();
             foreach (ItemStackChange itemStack in e.Added)
-            {
                 if (museum.isItemSuitableForDonation(itemStack.Item))
-                    donateableItem = true;
-                
-                if (donateableItem) 
-                    donateableItemNameList.Add(itemStack.Item.Name);
-            }
-                
-            if (!donateableItem)
+                    if (itemDic.Any(x => x.Value.Name.Equals(itemStack.Item.Name)))
+                        donateableItemDic.Add(itemDic.FirstOrDefault(x => x.Value.Equals(itemStack.Item)).Key, itemStack.Item);
+                    else
+                        this.Monitor.Log($"{Game1.player.Name} - Donateable Item: Didn't found ID for {itemStack.Item}.", LogLevel.Error);
+
+            if (donateableItemDic.Count == 0)
                 return;
 
-            List<int> donatedItemIDList = new List<int>();
-
+            List<int> donatedItemList = new List<int>();
             foreach (KeyValuePair<Vector2, int> pair in museum.museumPieces.Pairs)
-                donatedItemIDList.Add(pair.Value);
+                donatedItemList.Add(pair.Value);
 
-            bool donateItemFound = false;
-            foreach (SearchableItem sItem in GetItems(donateableItemNameList.ToArray()))
-                if (!donatedItemIDList.Contains(sItem.ID))
-                    donateItemFound = true;
+            bool ItemsToDonate = false;
+            foreach (KeyValuePair<int, Item> donateableItem in donateableItemDic)
+                if (!donatedItemList.Contains(donateableItem.Key))
+                    ItemsToDonate = true;
 
-            if (donateItemFound)
+            if (ItemsToDonate)
                 Game1.addHUDMessage(new HUDMessage(Helper.Translation.Get("message-type.found-museum-item")));
-
         }
 
-        private readonly ItemRepository Items = new ItemRepository();
-
-        public IEnumerable<SearchableItem> GetItems(string[] searchWords)
+        private void GenerateItemList()
         {
-            // normalise search term
-            searchWords = searchWords?.Where(word => !string.IsNullOrWhiteSpace(word)).ToArray();
-            if (searchWords?.Any() == false)
-                searchWords = null;
+            itemDic = new Dictionary<int, Item>();
 
-            // find matches
-            return (
-                from item in this.Items.GetAll()
-                let term = $"{item.ID}|{item.Type}|{item.Name}|{item.DisplayName}"
-                where searchWords == null || searchWords.All(word => term.IndexOf(word, StringComparison.CurrentCultureIgnoreCase) != -1)
-                select item
-            );
+            foreach (int id in Game1.objectInformation.Keys)
+            {
+                SObject item = new SObject(id, 1);
+                itemDic.Add(id, item);
+            }
+
+            itemDicGenerated = true;
         }
     }
 }
