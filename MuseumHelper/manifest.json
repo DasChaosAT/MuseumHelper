@@ -1,0 +1,10 @@
+﻿{
+    "Name": "Museum Helper",
+    "Author": "DasChaos",
+    "Version": "1.0.0",
+    "Description": "Shows you a notification if a collected item is missing in the museum.",
+    "UniqueID": "DasChaos.MuseumHelper",
+    "EntryDll": "MuseumHelper.dll",
+    "MinimumApiVersion": "2.0",
+    "UpdateKeys": []
+}
